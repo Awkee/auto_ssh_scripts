@@ -1,0 +1,140 @@
+#########################################################################
+# File Name: mscp
+# Author: zioer
+# mail: xiaoyu0720@gmail.com
+# Created Time: 2017年02月08日
+#########################################################################
+
+usage()
+{
+	app_name=$(basename $0)
+cat <<END
+
+使用说明:
+
+	${app_name} [-r] [-e] [-u username] [-p password] <ip-list> <local_path> <remote_path>
+
+功能说明:
+
+	此工具帮助我们执行从本地向多台主机进行版本发布任务,可以传输文件也可以传输目录
+
+参数说明：
+
+	[-r]	: 此参数为可选参数，仅当传输的<local_path>为目录时设置此参数，默认情况下只传输文件
+	
+	[-e -u username -p password]	:可选参数，默认使用当前登录用户并且可以免认证访问所有主机，如果设置此选项标识需要使用expect命令在指定username下批量执行<cmd>命令,如果username不指定就取默认当前登录用户名
+
+	<ip|ip-list>	: 此参数可以是确定的IP地址如192.168.1.2，也可以是指定的IP范围,示例:10.163.105.2-44,在默认情况下使用的是当前用户访问指定IP地址列表,支持逗号指定离散IP列表，也支持减号指定连续IP列表,192.168.2.2-5,192.168.3.2-10,192.168.4.5-20,192.168.5.6
+
+	<local_path>	: 此参数为本地路径，可以是文件或者目录的绝对路径和相对路径
+	
+	<remote_path>	: 此参数为远端路径，可以是文件或者目录的绝对路径和相对路径
+
+示例:
+
+	${app_name} 192.168.1.2-23 /tmp/my_upload_file /work/myuserpath/data/ : 使用默认用户进行免密码认证传输本地文件到所有的远端主机目录下
+
+	${app_name} -r 192.168.1.2-23 /data01/tempdir/ /work/myuserpath/data/ : 用默认用户进行免密码认证传输本地目录到所有的远端主机目录下
+
+	${app_name} -r -u myuser 192.168.1.2-23 /data01/tempdir/ /work/myuserpath/data/ : 用myuser用户进行免密码认证传输本地目录到所有的远端主机目录下
+
+	${app_name} -e -u testuser -p testpassword 192.168.1.2-23 /tmp/my_upload_file /work/myuserpath/data/ : 使用testuser用户进行自动输入密码方式传输本地文件到所有的远端主机目录下
+
+END
+
+}
+
+while getopts era:u:p: arg_val
+do
+	case $arg_val  in
+	e)
+		expect_flag="1"
+	;;
+	r)
+		dir_flag="1"
+	;;
+	u)
+		username="$OPTARG"
+	;;
+	p)
+		password="$OPTARG"
+	;;
+	?)
+		usage
+	;;
+	esac
+done
+
+
+shift $(($OPTIND - 1 ))
+
+if [ "$#" = "0" ] ; then
+	usage
+	exit 2
+fi
+
+IPLIST="$1" ; 
+
+shift;
+
+if [ "$#" = "0" ] ; then
+	usage
+	exit 1
+fi
+
+default_username=`whoami`
+login_username=${username:-${default_username}}
+login_password=${password:-${default_username}}
+
+#$(echo "$IPLIST"| awk '{n=split($0,ip,".");if(n == 4){m=split(ip[4], arr ,"-");if( m == 2){ start=arr[1]; end=arr[2] }else{start=ip[4];end=ip[4];}for( i= start; i <= end; i++)printf("%d.%d.%d.%d ",ip[1],ip[2],ip[3],i);}}' )
+#
+# 支持逗号,分隔间隔的IP段,连续IP段使用减号n-m方式表达 ###
+
+str_ip_list=$(echo "$IPLIST"| awk -F',' '{for( num_ip = 1; num_ip <= $NF ; num_ip ++) {n=split($num_ip,ip,".");if(n == 4){m=split(ip[4], arr ,"-");if( m == 2){ start=arr[1]; end=arr[2] }else{start=ip[4];end=ip[4];}for( i= start; i <= end; i++)printf("%d.%d.%d.%d ",ip[1],ip[2],ip[3],i);}}}')
+
+local_path=$1
+remote_path=$2
+
+## 设置传输选项
+
+if [ -d ${local_path} -a "$dir_flag" != "1" ] ; then
+	echo
+	###"本地指定路径为目录，需要设置-r参数才可以！"
+	echo "local_path :[${local_path}] is a directory , you need set '-r' options and run this command again."
+	echo
+	return 9;
+fi
+
+if [ "$dir_flag" = "1" ] ; then
+	OPT=" -r ";
+	if [ ! -d ${local_path} ] ; then
+		echo "local_path is not a directory ! [${local_path}]"
+		return 1;
+	fi
+else
+	OPT="";
+	if [ ! -f ${local_path} ] ; then
+		echo "local_path is not a regular file! [${local_path}]"
+		return 1;
+	fi
+
+	if [ ! -r  ${local_path} ] ; then
+		echo "local_path can not be read! [${local_path}]"
+		return 2;
+	fi
+fi
+
+
+for myip in ${str_ip_list}
+do
+	if [ "$expect_flag" = "1" ] ; then
+		# 使用expect自动输入密码登录方式执行命令
+		auto_ssh_scp.exp ${myip} ${login_username} ${login_username} ${local_path} ${remote_path} ${OPT}
+	else
+		# 使用免密码认证登录方式执行命令
+		scp ${OPT} ${local_path} ${login_username}@${myip}:${remote_path}
+	fi
+done
+
+####END #####
+

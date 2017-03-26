@@ -1,0 +1,18 @@
+#!/usr/bin/expect -f  
+
+## 参数信息 `argv0`  <ip>  <username> <password>  $@
+set ip [lindex $argv 0 ]
+set username [lindex $argv 1 ]
+set password [lindex $argv 2 ]
+set CMD [lrange $argv 3 end]
+set timeout 60
+
+spawn ssh -l $username $ip ${CMD}
+
+expect {
+	"yes/no" { send "yes\r"; exp_continue}
+	-re "${username}.*ssword:|ssword:" { send "$password\r"  }
+	"${username}"  { }
+}
+#wait
+interact
