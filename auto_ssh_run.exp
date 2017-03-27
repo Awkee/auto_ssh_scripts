@@ -4,7 +4,7 @@
 set ip [lindex $argv 0 ]
 set username [lindex $argv 1 ]
 set password [lindex $argv 2 ]
-set CMD [lrange $argv 3 end]
+set CMD [lindex $argv 3]
 set timeout 60
 
 spawn ssh -l $username $ip ${CMD}

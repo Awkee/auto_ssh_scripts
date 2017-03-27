@@ -88,11 +88,11 @@ do
 	if [ "$expect_flag" = "1" ] ; then
 
 		# 使用expect自动输入密码登录方式执行命令
-		auto_ssh_run.exp ${myip} ${login_username} ${login_password} $@
+		auto_ssh_run.exp ${myip} ${login_username} ${login_password} "$@"
 	else
 
 		# 使用免密码认证登录方式执行命令
-		ssh -l ${login_username} ${myip} $@
+		ssh -l ${login_username} ${myip} "$@"
 	fi
 done
 
