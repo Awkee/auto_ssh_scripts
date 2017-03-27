@@ -11,33 +11,30 @@ usage()
 cat <<END
 
 使用说明:
-
 	${app_name} [-e -u username -p password] <ip-list> <cmds>
 
 功能说明:
-
 	此工具帮助我们在多主机批量执行同一任务工作，比如批量开机/关机/批量查看主机参数信息等
 
 参数说明：
-
 	[-e -u username -p password]	:可选参数，默认使用当前登录用户并且可以免认证访问所有主机，如果设置此选项标识需要使用expect命令在指定username下批量执行<cmd>命令,如果username不指定就取默认当前登录用户名
-
 	<ip|ip-list>	: 此参数可以是确定的IP地址如192.168.1.2，也可以是指定的IP范围,示例:10.163.105.2-44,在默认情况下使用的是当前登录用户访问指定IP地址列表,支持逗号指定离散IP列表，也支持减号指定连续IP列表,192.168.2.2-5,192.168.3.2-10,192.168.4.5-20,192.168.5.6
-
 	<cmds>	: 此参数为需要在指定的IP地址下执行的命令语句。
 
 示例:
-
 	${app_name} 192.168.1.2-23 'hostname;ls -l ~/.ssh/*.pub' : 使用默认的当前登录用户进行免密码认证执行命令
-
 	${app_name} -u myuser 192.168.1.2-23 'hostname;ls -l ~/.ssh/*.pub'  : 使用myuser用户进行免密码认证执行命令
-
 	${app_name} -e -u testuser -p testpassword 192.168.1.2-23 'hostname;ls -l ~/.ssh/*.pub' : 使用testuser用户进行自动输入密码方式执行命令
 
 END
 
 }
 
+##命令分割线
+printline()
+{
+	echo ">------------------------------------------------------------------end line info:[$@]---[分割线]--<"
+}
 
 while getopts ea:l:u:p: arg_val
 do
@@ -64,7 +61,7 @@ if [ "$#" = "0" ] ; then
 	exit 2
 fi
 
-IPLIST="$1" ; 
+IPLIST="$1" ;
 
 shift;
 
@@ -94,7 +91,7 @@ do
 		# 使用免密码认证登录方式执行命令
 		ssh -l ${login_username} ${myip} "$@"
 	fi
+	printline "ip:$myip , user:$login_username , cmd:$@"
 done
 
 ####END #####
-

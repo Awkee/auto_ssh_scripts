@@ -11,37 +11,32 @@ usage()
 cat <<END
 
 使用说明:
-
 	${app_name} [-r] [-e] [-u username] [-p password] <ip-list> <local_path> <remote_path>
 
 功能说明:
-
 	此工具帮助我们执行从本地向多台主机进行版本发布任务,可以传输文件也可以传输目录
 
 参数说明：
-
 	[-r]	: 此参数为可选参数，仅当传输的<local_path>为目录时设置此参数，默认情况下只传输文件
-	
 	[-e -u username -p password]	:可选参数，默认使用当前登录用户并且可以免认证访问所有主机，如果设置此选项标识需要使用expect命令在指定username下批量执行<cmd>命令,如果username不指定就取默认当前登录用户名
-
 	<ip|ip-list>	: 此参数可以是确定的IP地址如192.168.1.2，也可以是指定的IP范围,示例:10.163.105.2-44,在默认情况下使用的是当前用户访问指定IP地址列表,支持逗号指定离散IP列表，也支持减号指定连续IP列表,192.168.2.2-5,192.168.3.2-10,192.168.4.5-20,192.168.5.6
-
 	<local_path>	: 此参数为本地路径，可以是文件或者目录的绝对路径和相对路径
-	
 	<remote_path>	: 此参数为远端路径，可以是文件或者目录的绝对路径和相对路径
 
 示例:
-
 	${app_name} 192.168.1.2-23 /tmp/my_upload_file /work/myuserpath/data/ : 使用默认用户进行免密码认证传输本地文件到所有的远端主机目录下
-
 	${app_name} -r 192.168.1.2-23 /data01/tempdir/ /work/myuserpath/data/ : 用默认用户进行免密码认证传输本地目录到所有的远端主机目录下
-
 	${app_name} -r -u myuser 192.168.1.2-23 /data01/tempdir/ /work/myuserpath/data/ : 用myuser用户进行免密码认证传输本地目录到所有的远端主机目录下
-
 	${app_name} -e -u testuser -p testpassword 192.168.1.2-23 /tmp/my_upload_file /work/myuserpath/data/ : 使用testuser用户进行自动输入密码方式传输本地文件到所有的远端主机目录下
 
 END
 
+}
+
+##命令分割线
+printline()
+{
+	echo ">------------------------------------------------------------------end line info:[$@]---[分割线]--<"
 }
 
 while getopts era:u:p: arg_val
@@ -73,7 +68,7 @@ if [ "$#" = "0" ] ; then
 	exit 2
 fi
 
-IPLIST="$1" ; 
+IPLIST="$1" ;
 
 shift;
 
@@ -129,12 +124,13 @@ for myip in ${str_ip_list}
 do
 	if [ "$expect_flag" = "1" ] ; then
 		# 使用expect自动输入密码登录方式执行命令
-		auto_ssh_scp.exp ${myip} ${login_username} ${login_username} ${local_path} ${remote_path} ${OPT}
+		auto_ssh_scp.exp ${myip} ${login_username} ${login_password} ${local_path} ${remote_path} ${OPT}
 	else
 		# 使用免密码认证登录方式执行命令
 		scp ${OPT} ${local_path} ${login_username}@${myip}:${remote_path}
 	fi
+	printline "ip:$myip , user:$login_username , opt:${OPT}"
+
 done
 
 ####END #####
-
