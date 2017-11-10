@@ -31,10 +31,16 @@ END
 
 }
 
+red_line()
+{
+    printf "\033[0;31;1m $@ \033[0m"
+}
+
 
 log_err()
 {
-	echo "$@" >&2
+	red_line "$@" >&2
+	echo >&2
 }
 
 
@@ -108,6 +114,13 @@ log_err "->命令执行时间:[`date +'%Y%m%d %H:%M:%S'`]<-"
 
 for myip in ${str_ip_list}
 do
+	ping ${myip} -c 1 -w 1 >/dev/null 
+	str_answer="$?"
+	if [ "${str_answer}" != "0" ] ; then
+		log_err "[ERROR]: ping ${myip} return ${str_answer}" 
+		continue
+	fi
+
 	if [ "$expect_flag" = "1" ] ; then
 
 		if [ "$bg_flag" = "1" ] ; then
