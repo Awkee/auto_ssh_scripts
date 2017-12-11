@@ -26,6 +26,9 @@
 
 	`mrun -e -u testuser -p testpassword 192.168.1.2-23 'hostname;ls -l ~/.ssh/*.pub'` : 使用testuser用户进行自动输入密码方式执行命令
 
+### 命令使用扩展
+	`mkeygen` : 自动生成并配置RSA公钥，实现免密码认证访问命令脚本.
+
 ## mscp命令
 
 
