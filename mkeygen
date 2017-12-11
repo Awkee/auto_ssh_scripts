@@ -1,0 +1,30 @@
+#########################################################################
+# File Name: mkeygen
+# Author: zioer
+# mail: xiaoyu0720@gmail.com
+# Created Time: 2017年12月11日
+#########################################################################
+#
+# mrun extension : 多主机密钥批量生成方法 ##
+## eg.
+#    mkeygen -q -e -u testuser -p 'abc1234' 127.0.0.1
+#    mkeygen -q -e -u testuser -p 'abc1234' 192.168.1.10-120
+
+
+OUT_FILE=/tmp/authorized_keys.`basename $0`.tmp
+LOG_FILE=/tmp/mkeygen.`basename $0`.log
+
+
+red_line()
+{
+    printf "\033[0;31;1m $@ \033[0m"
+}
+
+CMD='ssh-keygen -b 2048 -t rsa -P ""  -f ~/.ssh/id_rsa && [[ -f ~/.ssh/id_rsa.pub ]] && cat ~/.ssh/id_rsa.pub'
+
+mrun $@ "${CMD}" | tee ${LOG_FILE} | awk '/^ssh-rsa/' > ${OUT_FILE}
+
+echo
+echo "输出公钥到文件: `red_line ${OUT_FILE}`"
+echo
+
