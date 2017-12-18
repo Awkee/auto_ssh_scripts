@@ -62,4 +62,11 @@
 
 	`mscp -e -u testuser -p testpassword 192.168.1.2-23 /tmp/my_upload_file /work/myuserpath/data/` : 使用testuser用户进行自动输入密码方式传输本地文件到所有的远端主机目录下
 
+# 如何使用
+
+1. 下载源码, 将脚本赋权可执行权限.
+2. 将源码放到 $HOME/bin 或者 PATH 环境变量可以访问的路径下
+
+现在你就可以使用mrun,mscp命令了.
+
 ---
