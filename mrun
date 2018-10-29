@@ -8,7 +8,7 @@
 usage()
 {
 	app_name=$(basename $0)
-cat <<END
+cat <<END 
 
 使用说明:
 	${app_name} [-q -b ] [-e -u username -p password] <ip-list> <cmds>
@@ -17,7 +17,7 @@ cat <<END
 	此工具帮助我们在多主机批量执行同一任务工作，比如批量开机/关机/批量查看主机参数信息等
 
 参数说明：
-	-q    : 安静模式，不会输出分割线信息等提示信息，只会输出命令执行结果
+	-q    : 安静模式，不会输出分割线信息等提示信息，只会输出命令执行结果 
 	-b    : 后台运行模式， 命令会提交到后台运行，但是会在最后等待他们执行完成后再退出脚本命令.注意的是输出结果可能会混乱，因为无法控制每个后台进程的完成时间.
 	[-e -u username -p password]	:可选参数，默认使用当前登录用户并且可以免认证访问所有主机，如果设置此选项标识需要使用expect命令在指定username下批量执行<cmd>命令,如果username不指定就取默认当前登录用户名
 	<ip|ip-list>	: 此参数可以是确定的IP地址如192.168.1.2，也可以是指定的IP范围,示例:10.163.105.2-44,在默认情况下使用的是当前登录用户访问指定IP地址列表,支持逗号指定离散IP列表，也支持减号指定连续IP列表,192.168.2.2-5,192.168.3.2-10,192.168.4.5-20,192.168.5.6
@@ -31,12 +31,11 @@ END
 
 }
 
+
 red_line()
 {
     printf "\033[0;31;1m $@ \033[0m"
 }
-
-
 log_err()
 {
 	red_line "$@" >&2
@@ -90,7 +89,7 @@ if [ "$#" = "0" ] ; then
 	exit 2
 fi
 
-IPLIST="$1" ;
+IPLIST="$1" ; 
 
 shift;
 
@@ -108,9 +107,9 @@ login_password=${password:-${default_username}}
 # 支持逗号,分隔间隔的IP段,连续IP段使用减号n-m方式表达 ###
 
 #str_ip_list=`echo "$IPLIST"| awk -F',' '{for( num_ip = 1; num_ip <= NF ; num_ip ++) { n=split($num_ip,ip,".");if(n == 4){m=split(ip[4], arr ,"-");if( m == 2){ start=arr[1]; end=arr[2] }else{start=ip[4];end=ip[4];}for( i= start; i <= end; i++)printf("%d.%d.%d.%d ",ip[1],ip[2],ip[3],i);}}}'`
-str_ip_list=`echo "$IPLIST"| awk -F',' '{for( num_ip = 1; num_ip <= NF ; num_ip ++) { n=split($num_ip,ip,".");if(n == 4){m=split(ip[4], arr ,"-");if( m == 2){ start=arr[1]; end=arr[2] }else{start=ip[4];end=ip[4];}for( i= start; i <= end; i++)printf("%d.%d.%d.%d ",ip[1],ip[2],ip[3],i);}if(n == 1){m=split(ip[1], arr ,"-");if( m == 2){start=arr[1]; end=arr[2] }else{start=ip[1]; end=ip[1]}for( i= start; i <= end; i++)printf("10.163.105.%d ", i);}}}'`
+str_ip_list=`echo "$IPLIST"| awk -F',' 'BEGIN{vip[1]="192"; vip[2]="168";vip[3]="1";}{for( num_ip = 1; num_ip <= NF ; num_ip ++) { n=split($num_ip,ip,".");if(n == 4){vip[1] = ip[1];vip[2] = ip[2];vip[3] = ip[3];m=split(ip[4], arr ,"-");if( m == 2){ start=arr[1]; end=arr[2] }else{start=ip[4];end=ip[4];}for( i= start; i <= end; i++)printf("%d.%d.%d.%d ",ip[1],ip[2],ip[3],i);}if(n == 1){m=split(ip[1], arr ,"-");if( m == 2){start=arr[1]; end=arr[2] }else{start=ip[1]; end=ip[1]}for( i= start; i <= end; i++)printf("%d.%d.%d.%d ",vip[1],vip[2],vip[3],i);}}}'`
 
-log_err "->命令执行时间:[`date +'%Y%m%d %H:%M:%S'`]<-"
+log_err "->命令执行时间:[`date +'%Y%m%d %H:%M:%S'`]<-" 
 
 for myip in ${str_ip_list}
 do
@@ -120,7 +119,6 @@ do
 		log_err "[ERROR]: ping ${myip} return ${str_answer}" 
 		continue
 	fi
-
 	if [ "$expect_flag" = "1" ] ; then
 
 		if [ "$bg_flag" = "1" ] ; then
@@ -128,15 +126,15 @@ do
 			auto_ssh_run.exp ${myip} ${login_username} ${login_password} "$@"  &
 		else
 			# 使用expect自动输入密码登录方式执行命令
-			auto_ssh_run.exp ${myip} ${login_username} ${login_password} "$@"
+			auto_ssh_run.exp ${myip} ${login_username} ${login_password} "$@" 
 		fi
 	else
 		if [ "$bg_flag" = "1" ] ; then
 			# 使用免密码认证登录方式执行命令
-			ssh -l ${login_username} ${myip} "$@" &
+			ssh -n -l ${login_username} ${myip} "$@" &
 		else
 			# 使用免密码认证登录方式执行命令
-			ssh -l ${login_username} ${myip} "$@"
+			ssh -n -l ${login_username} ${myip} "$@" 
 		fi
 	fi
 	printline "ip:$myip , user:$login_username , cmd:$@"
@@ -149,3 +147,4 @@ fi
 
 
 ####END #####
+
